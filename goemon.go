@@ -33,6 +33,7 @@ type goemon struct {
 	fsw    *fsnotify.Watcher
 	cmd    *exec.Cmd
 	conf   conf
+	asset  func(string) ([]byte, error)
 }
 
 type task struct {
@@ -223,8 +224,13 @@ func (g *goemon) load() error {
 	if err != nil {
 		return err
 	}
+	var b []byte
 	g.File = fn
-	b, err := ioutil.ReadFile(fn)
+	if g.asset == nil {
+		b, err = ioutil.ReadFile(fn)
+	} else {
+		b, err = g.asset(g.File)
+	}
 	if err != nil {
 		return err
 	}
@@ -258,6 +264,10 @@ func (g *goemon) load() error {
 		}
 	}
 	return nil
+}
+
+func (g *goemon) SetAsset(asset func(string) ([]byte, error)) {
+	g.asset = asset
 }
 
 func (g *goemon) Run() *goemon {
