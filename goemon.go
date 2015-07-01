@@ -27,6 +27,7 @@ var commandRe = regexp.MustCompile(`^\s*(:[a-z]+)(?:\s+(\S+))*$`)
 type goemon struct {
 	File   string
 	Logger *log.Logger
+	Dir    string
 	Args   []string
 	lrc    net.Listener
 	lrs    *livereload.Server
@@ -54,9 +55,11 @@ type conf struct {
 
 //New create new instance of goemon
 func New() *goemon {
+	dir, _ := filepath.Abs(".")
 	return &goemon{
 		File:   "goemon.yml",
 		Logger: log.New(os.Stderr, "GOEMON ", logFlag),
+		Dir:    dir,
 	}
 }
 
@@ -111,7 +114,8 @@ func compilePattern(pattern string) (*regexp.Regexp, error) {
 			} else if rs[i] == '?' {
 				buf.WriteString(`\S`)
 			} else {
-				buf.WriteString(fmt.Sprintf(`[\x%x]`, rs[i]))
+				// buf.WriteString(fmt.Sprintf(`[\x%x]`, rs[i]))
+				buf.WriteRune(rs[i])
 			}
 		}
 		buf.WriteString("$")
@@ -175,7 +179,7 @@ func (g *goemon) watch() error {
 	}
 	g.fsw.Add(g.File)
 
-	root, err := filepath.Abs(".")
+	root, err := filepath.Abs(g.Dir)
 	if err != nil {
 		g.Logger.Println(err)
 	}
@@ -219,6 +223,7 @@ func (g *goemon) watch() error {
 }
 
 func (g *goemon) load() error {
+	os.Chdir(g.Dir)
 	g.conf.Tasks = []*task{}
 	fn, err := filepath.Abs(g.File)
 	if err != nil {

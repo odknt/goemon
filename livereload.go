@@ -1185,3 +1185,7 @@ const liveReloadScript = `
 
 },{}]},{},[8]);
 `
+
+func GetLivereloadScript() string {
+	return liveReloadScript
+}
